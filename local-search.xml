@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+  
+  
+  <entry>
+    <title>OMS设计总结</title>
+    <link href="/my-blog/2022/10/24/OMS%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/"/>
+    <url>/my-blog/2022/10/24/OMS%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/</url>
+    
+    <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>普冷订单管理系统（下文统一使用OMS）是普冷WMS和TMS的订单入口，客户订单统一由OMS建单，经一定的逻辑处理后推送给下游系统进行作业。下游系统作业完毕之后，再将实际的作业数据进行回传OMS，整个数据流形成闭环。</p><p>目前OMS系统只处理ToB型业务订单，对ToC业务订单数据流暂不经OMS处理，仍然保持从ERP推送到普冷EDI，经EDI直接推送到WMS。电商订单实际发货信息也由WMS直接回传EDI，再由EDI回传ERP。</p><p>ToC业务的订单暂时不流入OMS考虑如下，这些考虑是结合普冷自身业务情况所得，不可一视同仁：</p><ul><li><p><code>ToC订单对时效性要求高，经OMS后多系统之间相互交互数据链条复杂，影响作业效率</code></p></li><li><p><code>同时对于电商来说订单取消概率大，多系统交互对于取消不及时，造成仓库错发误发，增大赔付率</code></p></li><li><p><code>另外OMS现今更大的作用还是服务与普冷仓配一体项目的作业流程，为了打通WMS和TMS系统，ToC订单目前只做仓储业务，没有必要再进入OMS</code></p></li></ul><h2 id="设计思想"><a href="#设计思想" class="headerlink" title="设计思想"></a>设计思想</h2><p>普冷整个系统数据流转图如下，下图为普冷业务最标准的仓配一体项目数据流转顺序：<br><img src="1666238182098.jpg" alt="数据流转图"><br>在此基础上还会有其他业务场景：纯仓储业务、纯运输业务以及仓配一体业务的其他数据流转方式。其他的业务场景表现到图中无非就是少一些步骤或者改变步骤的执行顺序，总体流程大同小异。</p><h3 id="OMS结构"><a href="#OMS结构" class="headerlink" title="OMS结构"></a>OMS结构</h3><p>从<strong>数据流转图</strong>中可以看出OMS在整个数据链路中所处的位置，OMS衔接了EDI和下游业务系统，是整个业务系统的中枢所在。</p><p>OMS在结构上设计为了两层结构：</p><ol><li><p><code>客户订单：客户原始订单</code></p></li><li><p><code>下游作业单：有原始订单根据不同的业务场景进行拆分，生成下游系统的作业单</code></p></li></ol><p>第一层和第二层的转换关系需要带入具体的业务场景进行说明会更好理解，我们按照普冷目前的业务场景进行细化，分别介绍在不同业务场景下两者的变化关系。</p><h4 id="仓配一体"><a href="#仓配一体" class="headerlink" title="仓配一体"></a>仓配一体</h4><p>仓配一体在实际业务中的表现用一句话概况就是，由普冷运输车队从普冷自由仓库提货后，送往客户指定目的地。</p><p>从这个场景中可以提炼出来，对于订单流的话，需要同时发往普冷的TMS和WMS系统，分别由车队排车和仓库发货。如果没有OMS的话，那么普冷两边的系统都要进行建单操作，人工操作麻烦。</p><p><img src="1666258067870.jpg" alt="仓配一体"></p><p>引入OMS的两层结构，OMS的第一层保留客户的原始订单需求，在OMS中通过一定的策略配置，将客户原始订单拆分成两份作业单，一份发往TMS：运输作业，一份发往WMS：出库作业。这样既保留了客户原始订单，又对照了下游作业类型，同时减少人工操作，系统结构清晰。</p><p>对于第二层中的两个作业类型，系统也并不是同步产生两个作业单，在设计初期考虑到实际场景是：当TMS的排程排车信息结果出来后，需要将排车信息随订单一起下发给仓库进行作业。所以系统在产生两层作业时，采用了异步处理的方式：</p><ol><li><p><code>第一层订单先生成运输作业</code></p></li><li><p><code>运输作业下发TMS</code></p></li><li><p><code>TMS排程排车信息回传OMS</code></p></li><li><p><code>OMS的运输作业单状态更新，自动生成仓库的出库作业，下发WMS</code></p></li></ol><p>这里主要解释仓配一体业务的结构，基于此结构，无论是纯仓储的业务还是纯运输的业务，在OMS的两层结构上无非就是少了一种作业类型而已，对于其他的系统流程和设计思想是一样的。</p><h3 id="核心引擎"><a href="#核心引擎" class="headerlink" title="核心引擎"></a>核心引擎</h3><p>OMS毕竟不只是为了仓配一体出库这一个场景而生的，既然是仓储业务，那必定会有入库、出库、调拨等作业类型，而仓配一体只是出库类型下面的一个业务场景。</p><p>这里再描述一个复杂的业务场景：仓配一体+仓间中转，有北京仓库出库，经普冷北京运输车队先送往上海仓库集货后再由上海车队送往上海的门店（可能具体的业务也不会发生，但是系统设计还是要考虑最复杂的场景）。</p><p>从这个场景中能提炼出来：</p><ol><li><p><code>北京仓库的出库作业</code></p></li><li><p><code>北京运输的运输作业</code></p></li><li><p><code>上海仓库的入库作业</code></p></li><li><p><code>上海仓库的出库作业</code></p></li><li><p><code>上海运输的运输作业</code></p></li></ol><p>这么多的单据如果是通过人工在OMS中生成，工作量同样是很大的。</p><p>因此，我们在OMS两层结构中引入了新的机制：<strong>事件</strong>，事件分为两个部分：事件因子和事件配置，我们同样以举例的方式来说明：</p><p><code>例如1：在上述场景中，仓配一体在OMS中需要先生成一个运输作业，那么这就是一个事件，我们将其抽象为因子，再具体到系统里面就是：什么样的订单在什么时候要先生成一个运输作业。</code></p><p><code>例如2：将生成的作业单需要推送给下游系统，同样是一个事件，这样我们就得出一个因子：自动将作业单推送给下游系统</code></p><p>最终我们在系统里面实现的结果如下：</p><p><img src="2022-10-24-14-15-24-image.png" alt="事件因子"></p><p>从上面表格中的事件因子名称不难猜出每个因子是做什么的，当我们把这些事件通过事件配置进行串联起来之后，我们就会得到以下结果：</p><p><img src="2022-10-24-13-43-06-1666590181345.jpg" alt="点击放大"></p><p>或者是这样：</p><p><img src="2022-10-24-13-44-06-image.png" alt="点击放大"></p><p>有了这样的事件配置之后，对应的订单将会按照这样此种配置场景进行执行：</p><p><img src="2022-10-24-13-50-07-image.png" alt="点击放大"></p><p>这一套事件配置不仅给用户展示了不同业务场景下多系统订单流数据的可视变化，同时也对用户建单作业省去了可量化的操作成本。此事件功能为OMS设计的<strong>核心</strong>功能，又是订单流处理的<strong>引擎</strong>所在。</p><p>以上这次则为OMS作为2层结构的所有设计思想。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>产品</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>系统设计</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>关于库存中心的思考</title>
+    <link href="/my-blog/2022/10/09/%E5%85%B3%E4%BA%8E%E5%BA%93%E5%AD%98%E4%B8%AD%E5%BF%83%E7%9A%84%E6%80%9D%E8%80%83/"/>
+    <url>/my-blog/2022/10/09/%E5%85%B3%E4%BA%8E%E5%BA%93%E5%AD%98%E4%B8%AD%E5%BF%83%E7%9A%84%E6%80%9D%E8%80%83/</url>
+    
+    <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>普冷是一家仓储物流公司，现有仓库在全国有20多个，上线正式使用的系统有MDM、OMS、WMS和TMS。其中全国各仓统一使用一个WMS云平台进行作业，系统数据按照仓库级做数据隔离，每个仓库都有单独的货主、产品、订单和库存。<br>基于公司业务发展和管理层要求，现需要对全国主数据进行统一管理，并且此主数据能够承担整个普冷主数据中心的角色，因此引入了MDM（Master Data Management）的概念。<br>目前普冷的客户有些是全国仓性质的，比如A客户即在北京仓发货、又在上海仓发货，WMS按仓进行数据隔离，主数据资料存储了两份，一份在北京仓下，一份在上海仓下，而在MDM中只存储一份。<br>数据流程为：ERP推送数据到普冷EDI，EDI再将数据下发给MDM，MDM会按照配置规则将主数据分发到各仓的WMS系统。流程如下：<br><img src="./1665286798599.png" alt="图片1"><br>这样引入MDM后可以解决主数据统一管理的问题，但是对于数据层面来说毕竟是产生了新的数据，进入了新的表，产生了新的主键ID，这就是关键问题，下面说明这个问题造成的影响。<br> <code>说明：WMS内部主数据不统一并不是系统设计问题，引入MDM是从公司管理角度出发 </code></p><h2 id="需求说明"><a href="#需求说明" class="headerlink" title="需求说明"></a>需求说明</h2><p>现在普冷上线了OMS系统，但是只对订单层面做了功能实现，系统中并没有库存的概念。系统需要完善此项功能，基于两方面考虑：</p><ul><li>OMS需要具备库存管理功能，可以不需要像WMS一样细粒度管理，但是要有库存概念</li><li> 部分业务场景进入OMS后，需要进行库存比对，以保证下游仓库库存量能够满足订单量</li></ul><h2 id="问题引入"><a href="#问题引入" class="headerlink" title="问题引入"></a>问题引入</h2><p>现在的库存管理是在WMS系统内部的，虽然是微服务架构但是和WMS的耦合度还是很强的，我们打算将库存管理从WMS解耦出来，做成库存中心，为什么要叫它中心？是因为OMS的原因，虽然OMS可以不管到像WMS那样细粒度的库存，但是OMS还是要有库存的概念存在的。</p><p>那么问题来了：OMS中用到的主数据是MDM，WMS用到的主数据是自己内部的数据，而现在的库存管理存储的数据是按照WMS的主数据进行存储的，所以现在的库存管理如果直接做成库存中心，OMS是无法查询库存对照关系的，因为两边的主数据是不一致的<br><img src="./%E7%9B%AE%E5%89%8D%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png" alt="目前的存储结构"></p><h2 id="期望效果"><a href="#期望效果" class="headerlink" title="期望效果"></a>期望效果</h2><p>将库存数据从WMS中解耦出来，抽象出一个库存中心，这样OMS和WMS就可以共用一份库存数据，两个系统也不需要考虑库存同步问题。<br><img src="./%E6%9C%9F%E6%9C%9B%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png" alt="期望的存储结构"><br>如果两边都有库存的话，存储结构就会如下：<br><img src="./%E4%B8%A4%E4%BB%BD%E5%BA%93%E5%AD%98%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png" alt="两份库存存储结构"><br>这样OMS的库存和WMS就需要考虑库存同步问题：</p><ol><li>入库</li><li>出库</li><li>库存修改</li><li>盘点</li></ol><p>等等一系列引起库存变动的操作都需要考虑同步问题，基于与之前外部系统做库存同步的接口经验来看，一是工作量很大，场景很多，需要全盘考虑，不能漏掉任何一处的业务场景；二是做好之后两边库存对账仍会有很大差异。基于以上遇到的情况这里不考虑<em><strong>两份库存的存储结构</strong></em>，当然还有一个原因是，普冷和外部客户系统是两个系统他们无法实现一个库存中心，而普冷是一个平台下的应用，库存中心的概念是合理的。</p><h2 id="初步想法"><a href="#初步想法" class="headerlink" title="初步想法"></a>初步想法</h2><p>既然要做库存中心，首先第一步要解决的就是把现在的库存管理从WMS系统中抽离出来，第二步要考虑上述提及的问题：主数据不统一，一份库存很难同时与两份主数据做对照关系。</p><p>第一步是纯技术问题这里不做过多阐述<br>第二步有三种解决方案（目前只想到了这两种方案）：</p><ol><li>库存中同时增加MDM和WMS主数据两个关系</li><li>库存中保留原结构还与WMS主数据保持一致，通过程序代码实现MDM主数据与WMS主数据的的关系进而找到对应的库存</li><li>对库存中心进行分层，分两层：WMS库存；<br>在WMS库存基础上再拆一次： OMS库存；两者对库存管理的维度不同。</li></ol>]]></content>
+    
+    
+    <categories>
+      
+      <category>产品</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>系统设计</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>B端产品 VS C端产品</title>
+    <link href="/my-blog/2022/10/08/B%E7%AB%AF%E4%BA%A7%E5%93%81-VS-C%E7%AB%AF%E4%BA%A7%E5%93%81/"/>
+    <url>/my-blog/2022/10/08/B%E7%AB%AF%E4%BA%A7%E5%93%81-VS-C%E7%AB%AF%E4%BA%A7%E5%93%81/</url>
+    
+    <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>一直都在做B端产品，并且接触到的系统是从0到1一点点做起来的，虽然没有做过C端产品但是之前看过些资料来说明B端产品与C端产品的区别，这里总结一下个人想法。其实对于<em><strong>B端产品</strong></em>和<em><strong>C端产品</strong></em>也可以看作是<strong>传统行业产品</strong>与<strong>互联网行业产品</strong>的对比。</p><h2 id="想法"><a href="#想法" class="headerlink" title="想法"></a>想法</h2><p><em>之前在小红书上面看到的一位大佬介绍两者的不同点简单进行以下总结(视频和博主找不到了，实在抱歉，可能会有偏差)：</em></p><ul><li><h6 id="用户粘性"><a href="#用户粘性" class="headerlink" title="用户粘性"></a>用户粘性</h6></li></ul><p>ToC产品更关注用户量的增长，需要在极短时间内实现大量的用户，要求时间短市场定位准确，来增加用户粘性。</p><p>ToB产品则是更注重对用户或者说企业问题的精准定位和解决方案，通常一个B端产品会在一个领域内做到极致，公司会经过长久打磨沉淀建立自己的品牌，与企业长久磨合最终形成用户增长和用户粘性。</p><ul><li><h6 id="产品设计"><a href="#产品设计" class="headerlink" title="产品设计"></a>产品设计</h6></li></ul><p>ToC产品的设计更注重个人用户在某些场景下的特定需求，要求页面美观操作简单等。</p><p>ToB产品更注重解决企业的实际问题，往往界面复杂功能众多，产品经理需要考虑整个链条的业务逻辑。</p><ul><li><h6 id="商业模式"><a href="#商业模式" class="headerlink" title="商业模式"></a>商业模式</h6></li></ul><p>ToC产品在商业化上注重用户付费量的积累，可以理解为每个用户可能每次付费10块20块积少成多，以及流量广告效应带来的收益等。</p><p>ToB产品更关注用户质的变化，大型知名企业所带来的口碑要比众多不知名小型企业要强许多，还有就是企业后续的续费问题代表了产品的真正价值。</p><hr><p><em>这里也从 苏杰老师的<a href="">《人人都是产品经理1.0》</a>摘录一些文章内容：</em></p><p><img src="1665219397225.jpg" alt="人人都是产品经理"></p><table><thead><tr><th>特点</th><th>典型的传统行业</th><th>互联网、软件行业</th></tr></thead><tbody><tr><td>行业形态</td><td>成熟行业</td><td>新兴行业</td></tr><tr><td>产品形态与成本结构</td><td>实物</td><td>虚拟物品</td></tr><tr><td>生命周期</td><td>几年</td><td>几个月</td></tr><tr><td>盈利模式</td><td>单一卖产品</td><td>多元盈利</td></tr><tr><td>用户心态</td><td>花钱买</td><td>免费用</td></tr></tbody></table><ul><li><h6 id="从行业形态上来看"><a href="#从行业形态上来看" class="headerlink" title="从行业形态上来看"></a>从行业形态上来看</h6></li></ul><p>传统行业的产品都比较成熟，有的软件已经存在十几年甚至几十年，哪怕不同产品供应商对于同一款产品他们的基本框架都是一样的，很难有一些重大创新。并且这样的产品对应的用户群体也是一样，用户都已经非常熟悉此类产品，也很难去改变用户的使用习惯。</p><p>比如：WMS、金蝶、泛微这一类B端系统</p><p>而互联网、软件行业就不一样，三天一小变、五天一大变，产品需要不断的创新突破，谁能先入为主谁就能够称王。</p><p>比如：淘宝、抖音、叮咚买菜这一类C端系统</p><ul><li><h6 id="从产品形态与成本结构来看"><a href="#从产品形态与成本结构来看" class="headerlink" title="从产品形态与成本结构来看"></a>从产品形态与成本结构来看</h6></li></ul><p>传统行业的产品多为实物，采购、仓储、物流等分工，产品研发出来以后，还有大量的制造成本，产品经理需要考虑如何打通整个供应链。</p><p>而互联网、软件行业无论是团队还是成本都是非常小，几个人就可以组建一个公司，几周就可以推出一款APP。</p><ul><li><h6 id="从生命周期来看"><a href="#从生命周期来看" class="headerlink" title="从生命周期来看"></a>从生命周期来看</h6></li></ul><p>传统行业的软件研发周期一般都是按年来算的，因为此类软件的产品形态决定了它的生命周期不得不需要花费这么久的时间去规划复杂的业务流程。</p><p>而互联网、软件行业则很短，现在也流行敏捷开发，产品的生命周期自然不言而喻。</p><ul><li><h6 id="从盈利模式来看"><a href="#从盈利模式来看" class="headerlink" title="从盈利模式来看"></a>从盈利模式来看</h6></li></ul><p>传统行业多为卖产品或者订服务，通过渠道分销，总之就是靠产品本身赚钱。</p><p>互联网、软件行业的产品大部分都是免费的，他们赚钱的渠道则是流量所带来的广告效益。</p><ul><li><h6 id="从用户心态来看"><a href="#从用户心态来看" class="headerlink" title="从用户心态来看"></a>从用户心态来看</h6></li></ul><p>传统行业软件用户买来之后，花了钱，哪怕有一个功能恶心到家了，也不得不用，自己掏的钱，咬着牙也得继续用，做不到说立刻再换一个。</p><p>互联网、软件行业的用户心态就不同了，毕竟是免费用的，哪里用着不舒服的自己就可以立马换一个，对于这种情况产品经理就比较痛苦了，要考虑用户的使用体验，交互设计，UI界面的美观度等等，真正体会到“用户是上帝”的感觉。</p><h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>从上面可以看出无论是看B端和C端还是看传统行业与互联网软件行业，他们的虽然分析的点不同但是表达的意思都是一样的。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>产品</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>心得总结</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>仓储服务一体化平台</title>
+    <link href="/my-blog/2022/10/08/%E4%BB%93%E5%82%A8%E6%9C%8D%E5%8A%A1%E4%B8%80%E4%BD%93%E5%8C%96%E5%B9%B3%E5%8F%B0/"/>
+    <url>/my-blog/2022/10/08/%E4%BB%93%E5%82%A8%E6%9C%8D%E5%8A%A1%E4%B8%80%E4%BD%93%E5%8C%96%E5%B9%B3%E5%8F%B0/</url>
+    
+    <content type="html"><![CDATA[<h2 id="SaaS平台介绍"><a href="#SaaS平台介绍" class="headerlink" title="SaaS平台介绍"></a>SaaS平台介绍</h2><p>基于SpringCloud开发的集订单管理(OMS)、仓储管理(WMS)、运输管理(TMS)与一体的SaaS平台</p><ul><li><h6 id="UMC【用户管理中心-User-Management-Center】"><a href="#UMC【用户管理中心-User-Management-Center】" class="headerlink" title="UMC【用户管理中心 User Management Center】"></a>UMC【用户管理中心 User Management Center】</h6><p>UMC提供整个平台的用户账号管理，通过Oauth2.0实现认证授权，各个平台单点登录，集成手机号验证登录、微信扫描登录。</p></li><li><h6 id="MDM【主数据管理-Master-Data-Management】"><a href="#MDM【主数据管理-Master-Data-Management】" class="headerlink" title="MDM【主数据管理 Master Data Management】"></a>MDM【主数据管理 Master Data Management】</h6><p>MDM提供整个平台的基础数据管理。功能有：客户管理、货主管理、产品管理、包装管理、地址管理、承运商管理、供应商管理、字典管理。</p></li><li><h6 id="OMS【订单管理系统-Order-Management-System】"><a href="#OMS【订单管理系统-Order-Management-System】" class="headerlink" title="OMS【订单管理系统 Order Management System】"></a>OMS【订单管理系统 Order Management System】</h6><p>OMS为整个平台的订单入口，统一派发统一监控。功能有：订单管理、任务计划管理、任务拆分、事件配置管理、节点监控、库存管理。</p></li><li><h6 id="WMS【仓储管理系统-Warehouse-Management-System】"><a href="#WMS【仓储管理系统-Warehouse-Management-System】" class="headerlink" title="WMS【仓储管理系统 Warehouse Management System】"></a>WMS【仓储管理系统 Warehouse Management System】</h6><p>WMS提供仓储服务功能，按照仓库维度做数据隔离。功能有：入库作业、出库作业、越库作业、库存作业、结算管理、电商发货、物流轨迹查询等。</p></li><li><h6 id="TMS【运输管理系统-Transportation-Management-System】"><a href="#TMS【运输管理系统-Transportation-Management-System】" class="headerlink" title="TMS【运输管理系统 Transportation Management System】"></a>TMS【运输管理系统 Transportation Management System】</h6><p>TMS承接仓储服务下游应用，为货物运输配送提供功能。功能有：作业单管理、计划单管理、运输单管理、可视化调度、结算管理等。</p></li><li><h6 id="AMS【预约管理系统-Appointment-Management-System】"><a href="#AMS【预约管理系统-Appointment-Management-System】" class="headerlink" title="AMS【预约管理系统 Appointment Management System】"></a>AMS【预约管理系统 Appointment Management System】</h6><p>AMS为WMS系统的上游应用，供应商通过在AMS系统中进行送货预约，预约成功之后信息推送到WMS。功能有：送货预约、预约审核、预约签到、预约叫号、预约调度、预约可视化管理、道口可视化管理、时间窗管理、供应商考核 </p></li><li><h6 id="EDI【客户数据交换系统-Electronic-Data-Interchange】"><a href="#EDI【客户数据交换系统-Electronic-Data-Interchange】" class="headerlink" title="EDI【客户数据交换系统 Electronic Data Interchange】"></a>EDI【客户数据交换系统 Electronic Data Interchange】</h6><p>  EDI是对接客户系统的入口，订单先经EDI处理，再流入OMS。功能有：接口鉴权、收货接口、发货接口、收货反馈接口、发货反馈接口、库存同步接口、库存异动接口、参数转换等</p></li></ul><h1 id="软件架构"><a href="#软件架构" class="headerlink" title="软件架构"></a>软件架构</h1><p><img src="729be84fe2e8d3295a888b322481bc1.jpg" alt="Saas平台架构图"><br><img src="1664256661450.jpg" alt="产品功能架构图"><br><img src="0efeb916b148d18eee7fd345993cc57.jpg" alt="EDI平台架构图"></p><h1 id="系统展示"><a href="#系统展示" class="headerlink" title="系统展示"></a>系统展示</h1><h2 id="登录"><a href="#登录" class="headerlink" title="登录"></a>登录</h2><p><img src="1664242603533.jpg" alt="图1"></p><h2 id="portal页"><a href="#portal页" class="headerlink" title="portal页"></a>portal页</h2><p><img src="1664242642377.jpg" alt="图1"></p><h2 id="UMC"><a href="#UMC" class="headerlink" title="UMC"></a>UMC</h2><p><img src="1664242724492.jpg" alt="图1"></p><h2 id="MDM"><a href="#MDM" class="headerlink" title="MDM"></a>MDM</h2><p><img src="1664242764166.jpg" alt="图1"></p><h2 id="OMS"><a href="#OMS" class="headerlink" title="OMS"></a>OMS</h2><p><img src="1664242813805.jpg" alt="图1"><br><img src="1664242875907.jpg" alt="图2"></p><h2 id="WMS"><a href="#WMS" class="headerlink" title="WMS"></a>WMS</h2><p><img src="1664242949650.jpg" alt="图1"><br><img src="1664243009337.jpg" alt="图2"></p><h2 id="TMS"><a href="#TMS" class="headerlink" title="TMS"></a>TMS</h2><p><img src="1664243179923.jpg" alt="图1"><br><img src="1664243231621.jpg" alt="图2"></p><h2 id="EDI"><a href="#EDI" class="headerlink" title="EDI"></a>EDI</h2><p><img src="1664243330417.jpg" alt="图1"></p><h1 id="原型设计"><a href="#原型设计" class="headerlink" title="原型设计"></a>原型设计</h1><p><img src="1664244070693.jpg" alt="输入图片说明"><br><img src="1664244094573.jpg" alt="输入图片说明"><br><img src="1664244123966.jpg" alt="输入图片说明"><br><img src="1664244178035.jpg" alt="输入图片说明"><br><img src="1664244286481.jpg" alt="输入图片说明"><br><img src="1664244307046.jpg" alt="输入图片说明"><br><img src="1664244345134.jpg" alt="输入图片说明"><br><img src="1664244506026.jpg" alt="输入图片说明"><br><img src="1664244533795.jpg" alt="输入图片说明"><br><img src="1664244654305.jpg" alt="输入图片说明"><br><img src="1664244736682.jpg" alt="输入图片说明"><br><img src="1664244841078.jpg" alt="输入图片说明"><br><img src="1664244899895.jpg" alt="输入图片说明"></p><h4 id="思路展示"><a href="#思路展示" class="headerlink" title="思路展示"></a>思路展示</h4><p><img src="1664245044485.jpg" alt="输入图片说明"><br><img src="1664245062702.jpg" alt="输入图片说明"><br><img src="1664245104050.jpg" alt="输入图片说明"><br><img src="1664245273065.png" alt="输入图片说明"><br><img src="1664245471951.jpg" alt="输入图片说明"><br><img src="1664245548787.jpg" alt="输入图片说明"><br><img src="1664245584635.jpg" alt="输入图片说明"><br><img src="1664245618171.jpg" alt="输入图片说明"><br><img src="1664245653299.jpg" alt="输入图片说明"><br><img src="1664245701210.jpg" alt="输入图片说明"></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>产品</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>工作成果</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  
+</search>

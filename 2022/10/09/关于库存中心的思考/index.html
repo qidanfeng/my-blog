@@ -1,0 +1,670 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/my-blog/img/favicon.jpg">
+  <link rel="icon" href="/my-blog/img/favicon.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="齐丹枫">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="前言普冷是一家仓储物流公司，现有仓库在全国有20多个，上线正式使用的系统有MDM、OMS、WMS和TMS。其中全国各仓统一使用一个WMS云平台进行作业，系统数据按照仓库级做数据隔离，每个仓库都有单独的货主、产品、订单和库存。基于公司业务发展和管理层要求，现需要对全国主数据进行统一管理，并且此主数据能够承担整个普冷主数据中心的角色，因此引入了MDM（Master Data Management）的概">
+<meta property="og:type" content="article">
+<meta property="og:title" content="关于库存中心的思考">
+<meta property="og:url" content="https://qidanfeng.github.io/my-blog/2022/10/09/%E5%85%B3%E4%BA%8E%E5%BA%93%E5%AD%98%E4%B8%AD%E5%BF%83%E7%9A%84%E6%80%9D%E8%80%83/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="前言普冷是一家仓储物流公司，现有仓库在全国有20多个，上线正式使用的系统有MDM、OMS、WMS和TMS。其中全国各仓统一使用一个WMS云平台进行作业，系统数据按照仓库级做数据隔离，每个仓库都有单独的货主、产品、订单和库存。基于公司业务发展和管理层要求，现需要对全国主数据进行统一管理，并且此主数据能够承担整个普冷主数据中心的角色，因此引入了MDM（Master Data Management）的概">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/09/%E5%85%B3%E4%BA%8E%E5%BA%93%E5%AD%98%E4%B8%AD%E5%BF%83%E7%9A%84%E6%80%9D%E8%80%83/1665286798599.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/09/%E5%85%B3%E4%BA%8E%E5%BA%93%E5%AD%98%E4%B8%AD%E5%BF%83%E7%9A%84%E6%80%9D%E8%80%83/%E7%9B%AE%E5%89%8D%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/09/%E5%85%B3%E4%BA%8E%E5%BA%93%E5%AD%98%E4%B8%AD%E5%BF%83%E7%9A%84%E6%80%9D%E8%80%83/%E6%9C%9F%E6%9C%9B%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/09/%E5%85%B3%E4%BA%8E%E5%BA%93%E5%AD%98%E4%B8%AD%E5%BF%83%E7%9A%84%E6%80%9D%E8%80%83/%E4%B8%A4%E4%BB%BD%E5%BA%93%E5%AD%98%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png">
+<meta property="article:published_time" content="2022-10-09T05:49:04.000Z">
+<meta property="article:modified_time" content="2022-10-13T09:03:04.000Z">
+<meta property="article:author" content="齐丹枫">
+<meta property="article:tag" content="系统设计">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://qidanfeng.github.io/my-blog/2022/10/09/%E5%85%B3%E4%BA%8E%E5%BA%93%E5%AD%98%E4%B8%AD%E5%BF%83%E7%9A%84%E6%80%9D%E8%80%83/1665286798599.png">
+  
+  
+  
+  <title>关于库存中心的思考 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/my-blog/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/my-blog/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/my-blog/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"qidanfeng.github.io","root":"/my-blog/","version":"1.9.3","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/my-blog/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/my-blog/js/utils.js" ></script>
+  <script  src="/my-blog/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/my-blog/">
+      <strong>Fluid</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/my-blog/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/my-blog/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/my-blog/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/my-blog/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/my-blog/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/my-blog/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="关于库存中心的思考"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-10-09 13:49" pubdate>
+          2022年10月9日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          12 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">关于库存中心的思考</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>普冷是一家仓储物流公司，现有仓库在全国有20多个，上线正式使用的系统有MDM、OMS、WMS和TMS。其中全国各仓统一使用一个WMS云平台进行作业，系统数据按照仓库级做数据隔离，每个仓库都有单独的货主、产品、订单和库存。<br>基于公司业务发展和管理层要求，现需要对全国主数据进行统一管理，并且此主数据能够承担整个普冷主数据中心的角色，因此引入了MDM（Master Data Management）的概念。<br>目前普冷的客户有些是全国仓性质的，比如A客户即在北京仓发货、又在上海仓发货，WMS按仓进行数据隔离，主数据资料存储了两份，一份在北京仓下，一份在上海仓下，而在MDM中只存储一份。<br>数据流程为：ERP推送数据到普冷EDI，EDI再将数据下发给MDM，MDM会按照配置规则将主数据分发到各仓的WMS系统。流程如下：<br><img src="./1665286798599.png" srcset="/my-blog/img/loading.gif" lazyload alt="图片1"><br>这样引入MDM后可以解决主数据统一管理的问题，但是对于数据层面来说毕竟是产生了新的数据，进入了新的表，产生了新的主键ID，这就是关键问题，下面说明这个问题造成的影响。<br> <code>说明：WMS内部主数据不统一并不是系统设计问题，引入MDM是从公司管理角度出发 </code></p>
+<h2 id="需求说明"><a href="#需求说明" class="headerlink" title="需求说明"></a>需求说明</h2><p>现在普冷上线了OMS系统，但是只对订单层面做了功能实现，系统中并没有库存的概念。系统需要完善此项功能，基于两方面考虑：</p>
+<ul>
+<li>OMS需要具备库存管理功能，可以不需要像WMS一样细粒度管理，但是要有库存概念</li>
+<li> 部分业务场景进入OMS后，需要进行库存比对，以保证下游仓库库存量能够满足订单量</li>
+</ul>
+<h2 id="问题引入"><a href="#问题引入" class="headerlink" title="问题引入"></a>问题引入</h2><p>现在的库存管理是在WMS系统内部的，虽然是微服务架构但是和WMS的耦合度还是很强的，我们打算将库存管理从WMS解耦出来，做成库存中心，为什么要叫它中心？是因为OMS的原因，虽然OMS可以不管到像WMS那样细粒度的库存，但是OMS还是要有库存的概念存在的。</p>
+<p>那么问题来了：OMS中用到的主数据是MDM，WMS用到的主数据是自己内部的数据，而现在的库存管理存储的数据是按照WMS的主数据进行存储的，所以现在的库存管理如果直接做成库存中心，OMS是无法查询库存对照关系的，因为两边的主数据是不一致的<br><img src="./%E7%9B%AE%E5%89%8D%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png" srcset="/my-blog/img/loading.gif" lazyload alt="目前的存储结构"></p>
+<h2 id="期望效果"><a href="#期望效果" class="headerlink" title="期望效果"></a>期望效果</h2><p>将库存数据从WMS中解耦出来，抽象出一个库存中心，这样OMS和WMS就可以共用一份库存数据，两个系统也不需要考虑库存同步问题。<br><img src="./%E6%9C%9F%E6%9C%9B%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png" srcset="/my-blog/img/loading.gif" lazyload alt="期望的存储结构"><br>如果两边都有库存的话，存储结构就会如下：<br><img src="./%E4%B8%A4%E4%BB%BD%E5%BA%93%E5%AD%98%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png" srcset="/my-blog/img/loading.gif" lazyload alt="两份库存存储结构"><br>这样OMS的库存和WMS就需要考虑库存同步问题：</p>
+<ol>
+<li>入库</li>
+<li>出库</li>
+<li>库存修改</li>
+<li>盘点</li>
+</ol>
+<p>等等一系列引起库存变动的操作都需要考虑同步问题，基于与之前外部系统做库存同步的接口经验来看，一是工作量很大，场景很多，需要全盘考虑，不能漏掉任何一处的业务场景；二是做好之后两边库存对账仍会有很大差异。基于以上遇到的情况这里不考虑<em><strong>两份库存的存储结构</strong></em>，当然还有一个原因是，普冷和外部客户系统是两个系统他们无法实现一个库存中心，而普冷是一个平台下的应用，库存中心的概念是合理的。</p>
+<h2 id="初步想法"><a href="#初步想法" class="headerlink" title="初步想法"></a>初步想法</h2><p>既然要做库存中心，首先第一步要解决的就是把现在的库存管理从WMS系统中抽离出来，第二步要考虑上述提及的问题：主数据不统一，一份库存很难同时与两份主数据做对照关系。</p>
+<p>第一步是纯技术问题这里不做过多阐述<br>第二步有三种解决方案（目前只想到了这两种方案）：</p>
+<ol>
+<li>库存中同时增加MDM和WMS主数据两个关系</li>
+<li>库存中保留原结构还与WMS主数据保持一致，通过程序代码实现MDM主数据与WMS主数据的的关系进而找到对应的库存</li>
+<li>对库存中心进行分层，分两层：WMS库存；<br>在WMS库存基础上再拆一次： OMS库存；两者对库存管理的维度不同。</li>
+</ol>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/my-blog/categories/%E4%BA%A7%E5%93%81/" class="category-chain-item">产品</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/my-blog/tags/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/">#系统设计</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>关于库存中心的思考</div>
+      <div>https://qidanfeng.github.io/my-blog/2022/10/09/关于库存中心的思考/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>齐丹枫</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年10月9日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/my-blog/2022/10/24/OMS%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/" title="OMS设计总结">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">OMS设计总结</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/my-blog/2022/10/08/B%E7%AB%AF%E4%BA%A7%E5%93%81-VS-C%E7%AB%AF%E4%BA%A7%E5%93%81/" title="B端产品 VS C端产品">
+                        <span class="hidden-mobile">B端产品 VS C端产品</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/my-blog/js/events.js" ></script>
+<script  src="/my-blog/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/my-blog/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/my-blog/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/my-blog/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
