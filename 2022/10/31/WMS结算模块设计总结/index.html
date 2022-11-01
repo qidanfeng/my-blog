@@ -16,29 +16,35 @@
   <meta name="author" content="齐丹枫">
   <meta name="keywords" content="">
   
-    <meta name="description" content="前言普冷订单管理系统（下文统一使用OMS）是普冷WMS和TMS的订单入口，客户订单统一由OMS建单，经一定的逻辑处理后推送给下游系统进行作业。下游系统作业完毕之后，再将实际的作业数据进行回传OMS，整个数据流形成闭环。 目前OMS系统只处理ToB型业务订单，对ToC业务订单数据流暂不经OMS处理，仍然保持从ERP推送到普冷EDI，经EDI直接推送到WMS。电商订单实际发货信息也由WMS直接回传ED">
+    <meta name="description" content="前言WMS全称：仓库管理系统（Warehouse Management System），以下提到WMS特指普冷内部系统WMS。仓库管理系统是为仓储行业提供的一套标准系统解决方案，对仓库的进出库货物管理，实现批次效期控制和追溯，能够准确的实时管理仓库货架上的货品库存信息，有效控制并跟踪仓库业务的物流和成本管理全过程。 普冷WMS提供入库业务、出库业务、调拨业务、退货业务、产品管理、货主管理、库位管理">
 <meta property="og:type" content="article">
-<meta property="og:title" content="OMS设计总结">
-<meta property="og:url" content="https://qidanfeng.github.io/my-blog/2022/10/24/OMS%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/index.html">
+<meta property="og:title" content="WMS结算模块设计总结">
+<meta property="og:url" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="前言普冷订单管理系统（下文统一使用OMS）是普冷WMS和TMS的订单入口，客户订单统一由OMS建单，经一定的逻辑处理后推送给下游系统进行作业。下游系统作业完毕之后，再将实际的作业数据进行回传OMS，整个数据流形成闭环。 目前OMS系统只处理ToB型业务订单，对ToC业务订单数据流暂不经OMS处理，仍然保持从ERP推送到普冷EDI，经EDI直接推送到WMS。电商订单实际发货信息也由WMS直接回传ED">
+<meta property="og:description" content="前言WMS全称：仓库管理系统（Warehouse Management System），以下提到WMS特指普冷内部系统WMS。仓库管理系统是为仓储行业提供的一套标准系统解决方案，对仓库的进出库货物管理，实现批次效期控制和追溯，能够准确的实时管理仓库货架上的货品库存信息，有效控制并跟踪仓库业务的物流和成本管理全过程。 普冷WMS提供入库业务、出库业务、调拨业务、退货业务、产品管理、货主管理、库位管理">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/24/OMS%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/1666238182098.jpg">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/24/OMS%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/1666258067870.jpg">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/24/OMS%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-10-24-14-15-24-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/24/OMS%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-10-24-13-43-06-1666590181345.jpg">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/24/OMS%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-10-24-13-44-06-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/24/OMS%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-10-24-13-50-07-image.png">
-<meta property="article:published_time" content="2022-10-24T02:20:04.000Z">
-<meta property="article:modified_time" content="2022-10-24T06:20:04.000Z">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-09-22-06-1667265693573.jpg">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-09-32-40-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-09-54-59-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-09-58-08-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-10-06-18-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-10-10-00-1667268565217.jpg">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-10-12-43-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-10-32-25-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-10-37-32-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-11-15-13-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-11-37-08-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-11-46-18-image.png">
+<meta property="article:published_time" content="2022-10-31T08:49:04.000Z">
+<meta property="article:modified_time" content="2022-10-31T08:49:04.000Z">
 <meta property="article:author" content="齐丹枫">
 <meta property="article:tag" content="系统设计">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://qidanfeng.github.io/my-blog/2022/10/24/OMS%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/1666238182098.jpg">
+<meta name="twitter:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-09-22-06-1667265693573.jpg">
   
   
   
-  <title>OMS设计总结 - Hexo</title>
+  <title>WMS结算模块设计总结 - Hexo</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -203,7 +209,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="OMS设计总结"></span>
+            <span id="subtitle" data-typed-text="WMS结算模块设计总结"></span>
           
         </div>
 
@@ -214,8 +220,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2022-10-24 10:20" pubdate>
-          2022年10月24日 上午
+        <time datetime="2022-10-31 16:49" pubdate>
+          2022年10月31日 下午
         </time>
       </span>
     
@@ -226,7 +232,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.9k 字
+          1.4k 字
         
       </span>
     
@@ -237,7 +243,7 @@
         
         
         
-          17 分钟
+          12 分钟
         
       </span>
     
@@ -275,77 +281,61 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">OMS设计总结</h1>
+            <h1 style="display: none">WMS结算模块设计总结</h1>
             
             
               <div class="markdown-body">
                 
-                <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>普冷订单管理系统（下文统一使用OMS）是普冷WMS和TMS的订单入口，客户订单统一由OMS建单，经一定的逻辑处理后推送给下游系统进行作业。下游系统作业完毕之后，再将实际的作业数据进行回传OMS，整个数据流形成闭环。</p>
-<p>目前OMS系统只处理ToB型业务订单，对ToC业务订单数据流暂不经OMS处理，仍然保持从ERP推送到普冷EDI，经EDI直接推送到WMS。电商订单实际发货信息也由WMS直接回传EDI，再由EDI回传ERP。</p>
-<p>ToC业务的订单暂时不流入OMS考虑如下，这些考虑是结合普冷自身业务情况所得，不可一视同仁：</p>
+                <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>WMS全称：仓库管理系统（Warehouse Management System），以下提到WMS特指普冷内部系统WMS。仓库管理系统是为仓储行业提供的一套标准系统解决方案，对仓库的进出库货物管理，实现批次效期控制和追溯，能够准确的实时管理仓库货架上的货品库存信息，有效控制并跟踪仓库业务的物流和成本管理全过程。</p>
+<p>普冷WMS提供入库业务、出库业务、调拨业务、退货业务、产品管理、货主管理、库位管理、库存管理等，支持多仓同时使用的SaaS平台。</p>
+<p>目前普冷服务的业务场景有B2B和B2C两种业务类型，客户群体涉及商超、餐饮、电商等业务范围。客户数量种类繁多，业务操作场景复杂，仓储作业中产生的业务操作费随之复杂多样，造成了单证客服每月账单通过手工的方式难以统计，故需要迫切开发系统自动结算功能。</p>
+<h2 id="前期思考"><a href="#前期思考" class="headerlink" title="前期思考"></a>前期思考</h2><p>在进行产品设计之前，首要的两个问题需要先了解清楚：</p>
+<ol>
+<li><p><code>现在手工账单是如何统计的？</code></p>
+</li>
+<li><p><code>普冷与各个客户签订的合同是怎样的？</code></p>
+</li>
+</ol>
+<h3 id="手工账单"><a href="#手工账单" class="headerlink" title="手工账单"></a>手工账单</h3><p>废话不多说直接上图（图片中的数字经过处理）</p>
+<p><img src="2022-11-01-09-22-06-1667265693573.jpg" srcset="/my-blog/img/loading.gif" lazyload alt="2C客户手动账单样例"></p>
+<p><img src="2022-11-01-09-32-40-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="2B客户手工账单样例"></p>
+<p>从图片中我们可以看到手工账单主要分两大部分，一个sheet为本月每一个收费项目的总金额：invoice，剩下的sheet则为具体的运营操作明细。具体的计算方式都是通过一些函数将明细进行汇总处理之后，链接到invoice的数量列。</p>
+<h3 id="客户合同"><a href="#客户合同" class="headerlink" title="客户合同"></a>客户合同</h3><p><img src="2022-11-01-09-54-59-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="2B客户合同样例"></p>
+<p><img src="2022-11-01-09-58-08-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="2B客户合同样例"></p>
+<p><img src="2022-11-01-10-06-18-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="2C客户合同样例"></p>
+<p><img src="2022-11-01-10-10-00-1667268565217.jpg" srcset="/my-blog/img/loading.gif" lazyload alt="2C客户合同样例"></p>
+<p><img src="2022-11-01-10-12-43-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="2C客户合同样例"></p>
+<p>上述图片分别列举2B和2C几个合同的样例，每个客户的合同虽然不同，但是基本的原理和结构是一样的。</p>
+<p>这里将当时我分析合同的逻辑描述一下：</p>
 <ul>
-<li><p><code>ToC订单对时效性要求高，经OMS后多系统之间相互交互数据链条复杂，影响作业效率</code></p>
+<li><p><code>所有的合同报价中第一列都是收费项目，而收费项目则是说明都有哪些运营作业是需要收费的。</code></p>
 </li>
-<li><p><code>同时对于电商来说订单取消概率大，多系统交互对于取消不及时，造成仓库错发误发，增大赔付率</code></p>
-</li>
-<li><p><code>另外OMS现今更大的作用还是服务与普冷仓配一体项目的作业流程，为了打通WMS和TMS系统，ToC订单目前只做仓储业务，没有必要再进入OMS</code></p>
+<li><p><code>合同中的第二列基本上是说明这个收费项目的一些限制条件，比如下图,总结一下就是说同一个收费项目会根据不同的条件将运作产生的数据计算为不同的价格来收费</code></p>
 </li>
 </ul>
-<h2 id="设计思想"><a href="#设计思想" class="headerlink" title="设计思想"></a>设计思想</h2><p>普冷整个系统数据流转图如下，下图为普冷业务最标准的仓配一体项目数据流转顺序：<br><img src="1666238182098.jpg" srcset="/my-blog/img/loading.gif" lazyload alt="数据流转图"><br>在此基础上还会有其他业务场景：纯仓储业务、纯运输业务以及仓配一体业务的其他数据流转方式。其他的业务场景表现到图中无非就是少一些步骤或者改变步骤的执行顺序，总体流程大同小异。</p>
-<h3 id="OMS结构"><a href="#OMS结构" class="headerlink" title="OMS结构"></a>OMS结构</h3><p>从<strong>数据流转图</strong>中可以看出OMS在整个数据链路中所处的位置，OMS衔接了EDI和下游业务系统，是整个业务系统的中枢所在。</p>
-<p>OMS在结构上设计为了两层结构：</p>
-<ol>
-<li><p><code>客户订单：客户原始订单</code></p>
+<p><img src="2022-11-01-10-32-25-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="合同样例"></p>
+<ul>
+<li><code>2C部分还有阶梯报价的部分，如下图，我们看最右边的描述，有点像出租车的报价模式，起步价，每增加一件多收多少钱</code></li>
+</ul>
+<p><img src="2022-11-01-10-37-32-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="合同样例"></p>
+<ul>
+<li><code>我们再来看下图，主要是收费单位这一列，这一列描述了收费项目是以什么标准进行收费的，有按照托、包裹个数、单子个数、箱数等等，我们这里往WMS系统的数据里面进行对照，无非就是把运营数据按照不同的维度进行了汇总计算，得出的一个数值，比如：（1）仓储费按托来收费的话，那就是要把库存数量值转化为托数；（2）打包费按照每个包裹的件数来收费，其实就是每个订单下面的明细数量总和。其他的收费项目都可以此思路进行推导出收费项目的收费单位到业务数据的具体数据</code></li>
+</ul>
+<p><img src="2022-11-01-11-15-13-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="合同样例"></p>
+<p>我们将一个合同进行刨析，拆分每一列来分析，最终能总结出一个合同包含了三个部分：收费的项目、收费项目的条件、收费项目的计算方式。</p>
+<p>然我们再以产品的思维去考虑问题，基本能够抽象出具体的产品概念：</p>
+<ul>
+<li><p><code>计费项目</code></p>
 </li>
-<li><p><code>下游作业单：有原始订单根据不同的业务场景进行拆分，生成下游系统的作业单</code></p>
+<li><p><code>计费条件：对业务数据行的筛选条件</code></p>
 </li>
-</ol>
-<p>第一层和第二层的转换关系需要带入具体的业务场景进行说明会更好理解，我们按照普冷目前的业务场景进行细化，分别介绍在不同业务场景下两者的变化关系。</p>
-<h4 id="仓配一体"><a href="#仓配一体" class="headerlink" title="仓配一体"></a>仓配一体</h4><p>仓配一体在实际业务中的表现用一句话概况就是，由普冷运输车队从普冷自由仓库提货后，送往客户指定目的地。</p>
-<p>从这个场景中可以提炼出来，对于订单流的话，需要同时发往普冷的TMS和WMS系统，分别由车队排车和仓库发货。如果没有OMS的话，那么普冷两边的系统都要进行建单操作，人工操作麻烦。</p>
-<p><img src="1666258067870.jpg" srcset="/my-blog/img/loading.gif" lazyload alt="仓配一体"></p>
-<p>引入OMS的两层结构，OMS的第一层保留客户的原始订单需求，在OMS中通过一定的策略配置，将客户原始订单拆分成两份作业单，一份发往TMS：运输作业，一份发往WMS：出库作业。这样既保留了客户原始订单，又对照了下游作业类型，同时减少人工操作，系统结构清晰。</p>
-<p>对于第二层中的两个作业类型，系统也并不是同步产生两个作业单，在设计初期考虑到实际场景是：当TMS的排程排车信息结果出来后，需要将排车信息随订单一起下发给仓库进行作业。所以系统在产生两层作业时，采用了异步处理的方式：</p>
-<ol>
-<li><p><code>第一层订单先生成运输作业</code></p>
+<li><p><code>计费因子：对业务数据的不同维度的计算方式</code></p>
 </li>
-<li><p><code>运输作业下发TMS</code></p>
-</li>
-<li><p><code>TMS排程排车信息回传OMS</code></p>
-</li>
-<li><p><code>OMS的运输作业单状态更新，自动生成仓库的出库作业，下发WMS</code></p>
-</li>
-</ol>
-<p>这里主要解释仓配一体业务的结构，基于此结构，无论是纯仓储的业务还是纯运输的业务，在OMS的两层结构上无非就是少了一种作业类型而已，对于其他的系统流程和设计思想是一样的。</p>
-<h3 id="核心引擎"><a href="#核心引擎" class="headerlink" title="核心引擎"></a>核心引擎</h3><p>OMS毕竟不只是为了仓配一体出库这一个场景而生的，既然是仓储业务，那必定会有入库、出库、调拨等作业类型，而仓配一体只是出库类型下面的一个业务场景。</p>
-<p>这里再描述一个复杂的业务场景：仓配一体+仓间中转，有北京仓库出库，经普冷北京运输车队先送往上海仓库集货后再由上海车队送往上海的门店（可能具体的业务也不会发生，但是系统设计还是要考虑最复杂的场景）。</p>
-<p>从这个场景中能提炼出来：</p>
-<ol>
-<li><p><code>北京仓库的出库作业</code></p>
-</li>
-<li><p><code>北京运输的运输作业</code></p>
-</li>
-<li><p><code>上海仓库的入库作业</code></p>
-</li>
-<li><p><code>上海仓库的出库作业</code></p>
-</li>
-<li><p><code>上海运输的运输作业</code></p>
-</li>
-</ol>
-<p>这么多的单据如果是通过人工在OMS中生成，工作量同样是很大的。</p>
-<p>因此，我们在OMS两层结构中引入了新的机制：<strong>事件</strong>，事件分为两个部分：事件因子和事件配置，我们同样以举例的方式来说明：</p>
-<p><code>例如1：在上述场景中，仓配一体在OMS中需要先生成一个运输作业，那么这就是一个事件，我们将其抽象为因子，再具体到系统里面就是：什么样的订单在什么时候要先生成一个运输作业。</code></p>
-<p><code>例如2：将生成的作业单需要推送给下游系统，同样是一个事件，这样我们就得出一个因子：自动将作业单推送给下游系统</code></p>
-<p>最终我们在系统里面实现的结果如下：</p>
-<p><img src="2022-10-24-14-15-24-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="事件因子"></p>
-<p>从上面表格中的事件因子名称不难猜出每个因子是做什么的，当我们把这些事件通过事件配置进行串联起来之后，我们就会得到以下结果：</p>
-<p><img src="2022-10-24-13-43-06-1666590181345.jpg" srcset="/my-blog/img/loading.gif" lazyload alt="点击放大"></p>
-<p>或者是这样：</p>
-<p><img src="2022-10-24-13-44-06-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="点击放大"></p>
-<p>有了这样的事件配置之后，对应的订单将会按照这样此种配置场景进行执行：</p>
-<p><img src="2022-10-24-13-50-07-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="点击放大"></p>
-<p>这一套事件配置不仅给用户展示了不同业务场景下多系统订单流数据的可视变化，同时也对用户建单作业省去了可量化的操作成本。此事件功能为OMS设计的<strong>核心</strong>功能，又是订单流处理的<strong>引擎</strong>所在。</p>
-<p>以上这次则为OMS作为2层结构的所有设计思想。</p>
+</ul>
+<h2 id="业务抽象化"><a href="#业务抽象化" class="headerlink" title="业务抽象化"></a>业务抽象化</h2><h3 id="计费项目"><a href="#计费项目" class="headerlink" title="计费项目"></a>计费项目</h3><p>我们先说<strong>计费项目</strong>，这个也好理解，就是这个是收的什么钱，具体到产品中也没有太多的逻辑，可以理解为就是一个类型，因而系统就首先得到一个产品功能：费项管理，功能很简单，我们这里就不展开讲述了。</p>
+<p><img src="2022-11-01-11-37-08-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="费项管理"></p>
+<p>由于自身的业务原因，我们将费项管理之上又增加了一层：<strong>货主费项管理</strong>。为什么会出现货主费项这一层呢？是因为不同的客户对于同一个费项的叫法不同，并且从用户的角度来看，更希望费项的名字能够更直观的表达出来具体的收费内容（当然，我们从合同中也能发现这一点）。从系统的角度而言，又不可能因为叫法不同，我们就重新开发一套费项计费方式。因而就又增加了这一层，而最原始的费项管理就真的变成了一种计费的类型。</p>
+<p><img src="2022-11-01-11-46-18-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="货主费项管理"></p>
 
                 
               </div>
@@ -391,8 +381,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>OMS设计总结</div>
-      <div>https://qidanfeng.github.io/my-blog/2022/10/24/OMS设计总结/</div>
+      <div>WMS结算模块设计总结</div>
+      <div>https://qidanfeng.github.io/my-blog/2022/10/31/WMS结算模块设计总结/</div>
     </div>
     <div class="license-meta">
       
@@ -404,7 +394,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2022年10月24日</div>
+          <div>2022年10月31日</div>
         </div>
       
       
@@ -436,18 +426,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/" title="WMS结算模块设计总结">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">WMS结算模块设计总结</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/my-blog/2022/10/09/%E5%85%B3%E4%BA%8E%E5%BA%93%E5%AD%98%E4%B8%AD%E5%BF%83%E7%9A%84%E6%80%9D%E8%80%83/" title="关于库存中心的思考">
-                        <span class="hidden-mobile">关于库存中心的思考</span>
+                      <a href="/my-blog/2022/10/24/OMS%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/" title="OMS设计总结">
+                        <span class="hidden-mobile">OMS设计总结</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
