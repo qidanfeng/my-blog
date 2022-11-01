@@ -35,8 +35,10 @@
 <meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-11-15-13-image.png">
 <meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-11-37-08-image.png">
 <meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-11-46-18-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-13-26-08-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-13-39-56-image.png">
 <meta property="article:published_time" content="2022-10-31T08:49:04.000Z">
-<meta property="article:modified_time" content="2022-10-31T08:49:04.000Z">
+<meta property="article:modified_time" content="2022-11-01T02:49:04.000Z">
 <meta property="article:author" content="齐丹枫">
 <meta property="article:tag" content="系统设计">
 <meta name="twitter:card" content="summary_large_image">
@@ -232,7 +234,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.4k 字
+          1.9k 字
         
       </span>
     
@@ -243,7 +245,7 @@
         
         
         
-          12 分钟
+          16 分钟
         
       </span>
     
@@ -297,7 +299,7 @@
 </li>
 </ol>
 <h3 id="手工账单"><a href="#手工账单" class="headerlink" title="手工账单"></a>手工账单</h3><p>废话不多说直接上图（图片中的数字经过处理）</p>
-<p><img src="2022-11-01-09-22-06-1667265693573.jpg" srcset="/my-blog/img/loading.gif" lazyload alt="2C客户手动账单样例"></p>
+<p><img src="2022-11-01-09-22-06-1667265693573.jpg" srcset="/my-blog/img/loading.gif" lazyload alt="2C客户手工账单样例"></p>
 <p><img src="2022-11-01-09-32-40-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="2B客户手工账单样例"></p>
 <p>从图片中我们可以看到手工账单主要分两大部分，一个sheet为本月每一个收费项目的总金额：invoice，剩下的sheet则为具体的运营操作明细。具体的计算方式都是通过一些函数将明细进行汇总处理之后，链接到invoice的数量列。</p>
 <h3 id="客户合同"><a href="#客户合同" class="headerlink" title="客户合同"></a>客户合同</h3><p><img src="2022-11-01-09-54-59-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="2B客户合同样例"></p>
@@ -310,7 +312,7 @@
 <ul>
 <li><p><code>所有的合同报价中第一列都是收费项目，而收费项目则是说明都有哪些运营作业是需要收费的。</code></p>
 </li>
-<li><p><code>合同中的第二列基本上是说明这个收费项目的一些限制条件，比如下图,总结一下就是说同一个收费项目会根据不同的条件将运作产生的数据计算为不同的价格来收费</code></p>
+<li><p><code>合同中的第二列基本上是说明这个收费项目的一些限制条件，比如下图，总结一下就是说同一个收费项目会根据不同的条件将运作产生的数据计算为不同的价格来收费</code></p>
 </li>
 </ul>
 <p><img src="2022-11-01-10-32-25-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="合同样例"></p>
@@ -319,11 +321,11 @@
 </ul>
 <p><img src="2022-11-01-10-37-32-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="合同样例"></p>
 <ul>
-<li><code>我们再来看下图，主要是收费单位这一列，这一列描述了收费项目是以什么标准进行收费的，有按照托、包裹个数、单子个数、箱数等等，我们这里往WMS系统的数据里面进行对照，无非就是把运营数据按照不同的维度进行了汇总计算，得出的一个数值，比如：（1）仓储费按托来收费的话，那就是要把库存数量值转化为托数；（2）打包费按照每个包裹的件数来收费，其实就是每个订单下面的明细数量总和。其他的收费项目都可以此思路进行推导出收费项目的收费单位到业务数据的具体数据</code></li>
+<li><code>我们再来看下图，主要是收费单位这一列，这一列描述了收费项目是以什么标准进行收费的，有按照托、包裹个数、单子个数、箱数等等，我们这里往WMS系统的数据里面进行对照，无非就是把运营数据按照不同的维度进行了汇总计算，得出的一个数值，比如：（1）仓储费按托来收费的话，那就是要把库存数量值转化为托数；（2）打包费按照每个包裹的件数来收费，其实就是每个订单下面的明细数量总和。其他的收费项目都可已此思路进行推导出收费项目的收费单位到业务数据的表现形式</code></li>
 </ul>
 <p><img src="2022-11-01-11-15-13-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="合同样例"></p>
-<p>我们将一个合同进行刨析，拆分每一列来分析，最终能总结出一个合同包含了三个部分：收费的项目、收费项目的条件、收费项目的计算方式。</p>
-<p>然我们再以产品的思维去考虑问题，基本能够抽象出具体的产品概念：</p>
+<p>我们将一个合同进行刨析，拆分每一列来分析后，最终能总结出一个合同包含了三个部分：收费的项目、收费项目的条件、收费项目的计算方式。</p>
+<p>然后我们再以产品的思维去考虑问题，基本能够抽象出具体的产品概念：</p>
 <ul>
 <li><p><code>计费项目</code></p>
 </li>
@@ -332,10 +334,33 @@
 <li><p><code>计费因子：对业务数据的不同维度的计算方式</code></p>
 </li>
 </ul>
-<h2 id="业务抽象化"><a href="#业务抽象化" class="headerlink" title="业务抽象化"></a>业务抽象化</h2><h3 id="计费项目"><a href="#计费项目" class="headerlink" title="计费项目"></a>计费项目</h3><p>我们先说<strong>计费项目</strong>，这个也好理解，就是这个是收的什么钱，具体到产品中也没有太多的逻辑，可以理解为就是一个类型，因而系统就首先得到一个产品功能：费项管理，功能很简单，我们这里就不展开讲述了。</p>
+<h2 id="业务抽象化"><a href="#业务抽象化" class="headerlink" title="业务抽象化"></a>业务抽象化</h2><h3 id="计费项目"><a href="#计费项目" class="headerlink" title="计费项目"></a>计费项目</h3><p>我们先说<strong>计费项目</strong>，这个也好理解，就是说明收的什么钱，具体到产品中也没有太多的逻辑，可以理解为就是一个类型，因而产品就首先得到一个系统功能：费项管理，功能很简单，我们这里就不展开讲述了。</p>
 <p><img src="2022-11-01-11-37-08-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="费项管理"></p>
-<p>由于自身的业务原因，我们将费项管理之上又增加了一层：<strong>货主费项管理</strong>。为什么会出现货主费项这一层呢？是因为不同的客户对于同一个费项的叫法不同，并且从用户的角度来看，更希望费项的名字能够更直观的表达出来具体的收费内容（当然，我们从合同中也能发现这一点）。从系统的角度而言，又不可能因为叫法不同，我们就重新开发一套费项计费方式。因而就又增加了这一层，而最原始的费项管理就真的变成了一种计费的类型。</p>
+<p>由于自身的业务原因，我们将费项管理之上又增加了一层：<strong>货主费项管理</strong>。</p>
+<p>为什么会出现货主费项这一层呢？是因为不同的客户对于同一个费项的叫法不同，并且从用户的角度来看，更希望费项的名字能够更直观的表达出来具体的收费内容（当然，我们从合同中也能发现这一点）。从系统的角度而言，又不可能因为叫法不同，我们就重新开发一套费项计费方式。因而就又增加了这一层，而最原始的费项管理就真的变成了一种计费的类型。</p>
 <p><img src="2022-11-01-11-46-18-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="货主费项管理"></p>
+<h3 id="计费条件"><a href="#计费条件" class="headerlink" title="计费条件"></a>计费条件</h3><p>计费条件就要带入具体的业务数据去看了，这样会更好理解一些。我们将合同中表格里面表述的内容用语句表达出来，就拿下面这幅图来说：</p>
+<p><img src="2022-11-01-13-26-08-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="合同样例"></p>
+<ol>
+<li><p>在计算仓储费的时候，如果库位是<strong>大库位</strong>，并且库位温区是<strong>冷冻</strong>的话，收费标准是 x元/托/天；</p>
+</li>
+<li><p>在计算仓储费的时候，如果库位是<strong>大库位</strong>，并且库位温区是<strong>冷藏</strong>的话，收费标准是 x元/托/天；</p>
+</li>
+<li><p>在计算仓储费的时候，如果库位是<strong>小库位</strong>，并且库位温区是<strong>冷冻</strong>的话，收费标准是 x元/托/天；</p>
+</li>
+<li><p>在计算仓储费的时候，如果库位是<strong>小库位</strong>，并且库位温区是<strong>冷藏</strong>的话，收费标准是 x元/托/天；</p>
+</li>
+<li><p>在计算入库装卸费的时候，如果是<strong>带托</strong>的，收费标准是 x元/托/次；</p>
+</li>
+<li><p>在计算入库理货费的时候，如果<strong>3&lt;= 品项&lt;=8</strong>的话，收费标准是 x元/托/次；</p>
+</li>
+<li><p>在计算入库理货费的时候，如果<strong>9&lt;= 品项</strong> 的话，收费标准是 x元/托/次；</p>
+</li>
+</ol>
+<p>总结一下：什么东西在满足什么条件的时候，收费是什么。</p>
+<p>那么我们又能从此分析中抽象出一个系统概念，费项需要能够支持各种维度的筛选条件，并且这些条件要能够支持多层的过滤，一层层筛选。</p>
+<p>我们结合自己业务数据的实际情况，将可能会出现的筛选条件都统一出来，得出一个系统功能：<strong>条件管理</strong></p>
+<p><img src="2022-11-01-13-39-56-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="条件管理"></p>
 
                 
               </div>
