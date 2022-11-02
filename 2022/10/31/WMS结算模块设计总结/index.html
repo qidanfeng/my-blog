@@ -37,6 +37,14 @@
 <meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-11-46-18-image.png">
 <meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-13-26-08-image.png">
 <meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-13-39-56-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-11-48-40-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-13-34-44-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-04-30-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-19-52-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-21-07-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-22-20-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-23-26-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-27-53-image.png">
 <meta property="article:published_time" content="2022-10-31T08:49:04.000Z">
 <meta property="article:modified_time" content="2022-11-01T02:49:04.000Z">
 <meta property="article:author" content="齐丹枫">
@@ -234,7 +242,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.9k 字
+          3.6k 字
         
       </span>
     
@@ -245,7 +253,7 @@
         
         
         
-          16 分钟
+          31 分钟
         
       </span>
     
@@ -361,6 +369,55 @@
 <p>那么我们又能从此分析中抽象出一个系统概念，费项需要能够支持各种维度的筛选条件，并且这些条件要能够支持多层的过滤，一层层筛选。</p>
 <p>我们结合自己业务数据的实际情况，将可能会出现的筛选条件都统一出来，得出一个系统功能：<strong>条件管理</strong></p>
 <p><img src="2022-11-01-13-39-56-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="条件管理"></p>
+<p>每一个条件其实就是对应一条数据的某个字段，熟悉数据库的同学可能会更好理解，数据库中的一列就可以做为一种条件存在。但是也是有前提的，并不是所有的列都可作为条件，必须是那种在一定的可变范围内的，例如：温区，对于冷链仓储来说，温区就那三四种。条件具体的使用方式，我们继续往下看，后面会慢慢带入。</p>
+<h3 id="计费因子"><a href="#计费因子" class="headerlink" title="计费因子"></a>计费因子</h3><p>计费因子单纯从字面意思来看比较抽象，我们还通过举例的方式来 说明。</p>
+<p>例如：我们都知道计算费用用数学公式表示就是：总费用 =数量 * 单价。单价是人定的，我们先不管，来看【数量】这个变量，带入具体的业务场景来看：仓储费 = 总托数 * 单价，那么我们是不是要先拿到这个总托数的值，然后系统才能去进行计算。</p>
+<p>我们再看一个例子。</p>
+<p>例如：出库拣货费 = 总箱数 * 单价，【总箱数】这个值我们也需要让系统进行计算出来。</p>
+<p>好了，例子就说这两个，其他的费用计算都是同样道理，只是每个费用计算的时候这个因子的参考值不同而已。</p>
+<p>综上，我们总结并设计了系统功能：<strong>因子管理</strong></p>
+<p><img src="2022-11-02-11-48-40-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="因子管理"></p>
+<p>可以看出每个因子都定义了一种计算方式，具体到程序里面就是一个个方法，每个方法就是一个个小型的算法库。而这种方式又能做到无限扩展。</p>
+<p>想必到这里大家应该有一些基本的了解了，可能会问，这三个东西咋用？好像没啥关联啊。是的，到目前为止他们还没有串起来，我们继续头脑风暴。</p>
+<h3 id="三者整合"><a href="#三者整合" class="headerlink" title="三者整合"></a>三者整合</h3><p>我们在整理一下思路，要得到一个费项的费用，我们首先要选择一个<strong>计费项目</strong>，如果有条件的话再把<strong>计费条件</strong>加上，然后再选择一种<strong>计费因子</strong>，这样他们三者的关系就建立出来了。</p>
+<p>首先我们要整合的关系是计费因子和计费条件，并且我们也只会将两者先进行关联整合，如下图：</p>
+<p><img src="2022-11-02-13-34-44-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="因子与条件关联"></p>
+<p>图片所示为计费因子=库存托数(库位码)来举例，下面绑定了它可以按照什么样的条件来产生这个因子的值。</p>
+<p>我们可以这样理解，有一群小朋友，我们现在要进行分组：</p>
+<ul>
+<li><p><code>分组方式一：5岁以下的一组，5到10岁的一组，10岁以上的一组；</code></p>
+</li>
+<li><p><code>分组方式二：男生一组，女生一组</code></p>
+</li>
+<li><p><code>分组方式三：先按照分组方式一分组，再按照分组方式二分组</code></p>
+</li>
+</ul>
+<p>以不同的方式来分组得出的组数是不是不一样？上面的计费因子就等于小朋友分组后的组数，计费条件就是分组的方式，这样按照不同维度计算出来的结果就会不一样。这样的系统设计可以最大成度的覆盖更多的应用场景。</p>
+<p>当然每一个因子能够支持的计费条件都是自己需要按照业务场景事先设定的，不是随便绑定的。</p>
+<p>对于计费项目其实我们并没有和计费因子+计费条件进行绑定，因为就像前面说的计费项目就是一个类型一个说明，就好比拿仓储费来说，没有人规定只能从库存的数据上面计算仓储费，实际的业务场景也有可能会从出入库订单层面去计算仓储费。</p>
+<p>另外不进行关系绑定，又能使系统支持的业务场景更加丰富，就算没有前面的实际业务场景，我们不进行关系绑定也无可厚非，如果你非要拿库存托数去计算订单操作费，计算出来的是错误的，也只能说明你自己配置错了。</p>
+<p>还有一个原因就是系统架构设计的思维了，这个我也不知道怎么表述了…</p>
+<p>当然，此处不绑定并不代表永远都不绑定了，请看图：</p>
+<p><img src="2022-11-02-14-04-30-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="三者整合"></p>
+<p>上面所有的铺垫，其实就是为了得出这个图，好累啊。</p>
+<p>下面那一行就是条件，并且是支持添加子条件，是一个树结构的设计，不同的条件呢，就会有不同价格，其实上面文字里面也有提到这一点。（额…界面样式可以吐槽，但是逻辑就是那样）</p>
+<p>很好，我们已经得出了一个最基本的三者整合设计，发挥想象，结合业务场景，考虑可扩展性，考虑适配更多的场景，最后成果：</p>
+<p><img src="2022-11-02-14-19-52-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="合同明细配置1"></p>
+<p>也可以是这样：</p>
+<p><img src="2022-11-02-14-21-07-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="合同配置明细2"></p>
+<p>又或者是这样：</p>
+<p><img src="2022-11-02-14-22-20-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="合同配置明细3"></p>
+<p>这样：</p>
+<p><img src="2022-11-02-14-23-26-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="合同配置明细4"></p>
+<p>只有想不到，没有做不到（夸张句，请忽略）。</p>
+<p>最终三者的整合已经全部呈现出来，而呈现的方式我们仍然是通过合同的方式将其绑定。我们在系统中增加了：<strong>应收计费配置</strong>，其实就是通过系统来呈现出一张完整的合同，如图：</p>
+<p><img src="2022-11-02-14-27-53-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="应收计费配置"></p>
+<p>至此，我们通过刨析合同、场景分析，将一张纸抽象进了系统，配置出一个能让计算机程序识别的东西：<strong>应收计费配置</strong>。</p>
+<p>结束了吗？No No No，这才刚进入正题。</p>
+<h2 id="数据源"><a href="#数据源" class="headerlink" title="数据源"></a>数据源</h2><p>懂系统懂程序的同学看到这里应该已经有疑问了，既然是配置，那配置配好了咋用？谁来用？何时用？</p>
+<p>这些问题我们先放放，最关键的一个东西：<strong>数据</strong>。</p>
+<p>既然我们是在讨论WMS计费，那计谁的费？当然是业务操作所产生的数据费用。</p>
+<p>数据呢？数据在WMS的业务数据库。</p>
 
                 
               </div>
