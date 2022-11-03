@@ -19,45 +19,45 @@
     <meta name="description" content="前言WMS全称：仓库管理系统（Warehouse Management System），以下提到WMS特指普冷内部系统WMS。仓库管理系统是为仓储行业提供的一套标准系统解决方案，对仓库的进出库货物管理，实现批次效期控制和追溯，能够准确的实时管理仓库货架上的货品库存信息，有效控制并跟踪仓库业务的物流和成本管理全过程。 普冷WMS提供入库业务、出库业务、调拨业务、退货业务、产品管理、货主管理、库位管理">
 <meta property="og:type" content="article">
 <meta property="og:title" content="WMS结算模块设计总结">
-<meta property="og:url" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/index.html">
+<meta property="og:url" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="前言WMS全称：仓库管理系统（Warehouse Management System），以下提到WMS特指普冷内部系统WMS。仓库管理系统是为仓储行业提供的一套标准系统解决方案，对仓库的进出库货物管理，实现批次效期控制和追溯，能够准确的实时管理仓库货架上的货品库存信息，有效控制并跟踪仓库业务的物流和成本管理全过程。 普冷WMS提供入库业务、出库业务、调拨业务、退货业务、产品管理、货主管理、库位管理">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-09-22-06-1667265693573.jpg">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-09-32-40-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-09-54-59-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-09-58-08-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-10-06-18-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-10-10-00-1667268565217.jpg">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-10-12-43-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-10-32-25-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-10-37-32-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-11-15-13-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-11-37-08-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-11-46-18-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-13-26-08-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-13-39-56-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-11-48-40-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-13-34-44-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-04-30-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-19-52-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-21-07-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-22-20-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-23-26-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-27-53-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-15-52-47-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-09-19-09-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-11-03-24-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-11-20-00-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-11-22-20-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-11-25-36-image.png">
-<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-11-29-13-image.png">
-<meta property="article:published_time" content="2022-10-31T08:49:04.000Z">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-09-22-06-1667265693573.jpg">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-09-32-40-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-09-54-59-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-09-58-08-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-10-06-18-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-10-10-00-1667268565217.jpg">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-10-12-43-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-10-32-25-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-10-37-32-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-11-15-13-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-11-37-08-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-11-46-18-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-13-26-08-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-13-39-56-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-11-48-40-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-13-34-44-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-04-30-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-19-52-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-21-07-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-22-20-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-23-26-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-27-53-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-15-52-47-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-09-19-09-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-11-03-24-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-11-20-00-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-11-22-20-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-11-25-36-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-11-29-13-image.png">
+<meta property="article:published_time" content="2022-11-05T03:49:04.000Z">
 <meta property="article:modified_time" content="2022-11-05T03:49:04.000Z">
 <meta property="article:author" content="齐丹枫">
 <meta property="article:tag" content="系统设计">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-09-22-06-1667265693573.jpg">
+<meta name="twitter:image" content="https://qidanfeng.github.io/my-blog/2022/11/05/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-01-09-22-06-1667265693573.jpg">
   
   
   
@@ -237,8 +237,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2022-10-31 16:49" pubdate>
-          2022年10月31日 下午
+        <time datetime="2022-11-05 11:49" pubdate>
+          2022年11月5日 中午
         </time>
       </span>
     
@@ -510,7 +510,7 @@
   <div class="license-box my-3">
     <div class="license-title">
       <div>WMS结算模块设计总结</div>
-      <div>https://qidanfeng.github.io/my-blog/2022/10/31/WMS结算模块设计总结/</div>
+      <div>https://qidanfeng.github.io/my-blog/2022/11/05/WMS结算模块设计总结/</div>
     </div>
     <div class="license-meta">
       
@@ -522,7 +522,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2022年10月31日</div>
+          <div>2022年11月5日</div>
         </div>
       
       
