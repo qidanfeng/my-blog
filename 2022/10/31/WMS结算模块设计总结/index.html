@@ -45,8 +45,15 @@
 <meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-22-20-image.png">
 <meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-23-26-image.png">
 <meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-14-27-53-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-02-15-52-47-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-09-19-09-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-11-03-24-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-11-20-00-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-11-22-20-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-11-25-36-image.png">
+<meta property="og:image" content="https://qidanfeng.github.io/my-blog/2022/10/31/WMS%E7%BB%93%E7%AE%97%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93/2022-11-03-11-29-13-image.png">
 <meta property="article:published_time" content="2022-10-31T08:49:04.000Z">
-<meta property="article:modified_time" content="2022-11-01T02:49:04.000Z">
+<meta property="article:modified_time" content="2022-11-05T03:49:04.000Z">
 <meta property="article:author" content="齐丹枫">
 <meta property="article:tag" content="系统设计">
 <meta name="twitter:card" content="summary_large_image">
@@ -242,7 +249,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.6k 字
+          5.1k 字
         
       </span>
     
@@ -253,7 +260,7 @@
         
         
         
-          31 分钟
+          43 分钟
         
       </span>
     
@@ -418,6 +425,45 @@
 <p>这些问题我们先放放，最关键的一个东西：<strong>数据</strong>。</p>
 <p>既然我们是在讨论WMS计费，那计谁的费？当然是业务操作所产生的数据费用。</p>
 <p>数据呢？数据在WMS的业务数据库。</p>
+<p>可是业务数据是非常细非常零散的数据，而我们计费都是取的不同维度下的总数，如果我们直接拿业务数据去处理的话，恐怕有点难度。从架构的角度来看，就不行，数据量运算逻辑大的话，会对业务数据库造成压力，可能导致宕机。</p>
+<p>既然不能直接从业务数据库直接取，那就搞一个主从同步？从从库取数据。差不多是这个思路，但又不完全是，只对了一半。</p>
+<p>还是要分析场景：</p>
+<p>（<code>1）计费取到的都是按照不同维度下进行计算后的数据，业务数据库无论是主库还是从库都是没有办法直接取到的，从哪个库取都不合适</code></p>
+<p><code>（2）系统计算费用的逻辑非常复杂，压力要进行分摊，不能集中在一个时间点处理或者一步全部处理完，容易宕机</code></p>
+<p>基于以上考虑，再结合自己业务和系统的架构我们引入新的数据存储机制：<strong>业务数据中心</strong></p>
+<p>整体的数据处理机制如图所示：</p>
+<p><img src="2022-11-02-15-52-47-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="数据抽取"></p>
+<p>在进行ETL数据抽取时，我们已经按照相关的计费因子将系统的数据进行了提前计算，这样就同时满足了上面两点的顾虑。</p>
+<p>存储到数据库中的数据大概是这样的：</p>
+<p><img src="2022-11-03-09-19-09-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="数据中心库"></p>
+<p>通过右边的注释可以看出，数据中心的数据已事先计算，而计算好的数据又恰巧是对应我们计费因子的，这样在进行费用计算时只需要通过相关的因子去取对应列的数据即可，这样将压力进行分摊，提前处理，将系统资源合理分配开，这样对业务和应用都不会有较大的影响。</p>
+<p>数据中心的数据我们是按天进行抽取的，我们也称之为：<strong>日结数据</strong>。</p>
+<p>现在我们通过每天将业务数据抽取到数据中心产生每日的日结数据，解决了数据源的问题，接下来我们继续来说开头的那几个疑问，这些数据怎么用？何时用的问题。</p>
+<h2 id="开始计费"><a href="#开始计费" class="headerlink" title="开始计费"></a>开始计费</h2><p>在开始之前，有必要简要说明一下整体计费的流程：</p>
+<p><img src="2022-11-03-11-03-24-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="计费流程"></p>
+<p>流程如上图，分两步，先生成日结账单，再由日结产生月结账单。</p>
+<ul>
+<li><p><code>日结账单：每个客户每天会产生一份日结账单</code></p>
+</li>
+<li><p><code>月结账单：每个客户每个月按照账期将每天的日结账单汇总后，产生一份月结账单</code></p>
+</li>
+</ul>
+<p>由数据中心产生日结账单，可以看到我们这里使用了批处理作业的方式，就是通过定时任务每天几点开始执行，而具体的处理逻辑，定时任务则是需要按照用户通过<strong>应收计费配置</strong>设置的每个客户合同的计费方式，如图：</p>
+<p><img src="2022-11-03-11-20-00-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="计费合同"></p>
+<p>系统会参照上图的配置规则将数据中心的数据进行处理加工产生一条日结账单：</p>
+<p><img src="2022-11-03-11-22-20-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="日结账单"></p>
+<p>具体的执行逻辑我们这里就不展示了，这是属于开发层面的东西。</p>
+<p>从上述日结账单的图片中可以看出，每一个客户每天都会产生一条日结账单数据。</p>
+<p>我们随便找一天数据，点击后面的【查看】可以看到里面具体的计费项目：</p>
+<p><img src="2022-11-03-11-25-36-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="账单费项"></p>
+<p>这里所展示的货主合同费项就是此货主配置的应收计费配置里面的一条条配置。</p>
+<p>而月结账单和日结账单一样，就是把多条数据进行汇总成一条数据的呈现方式，我们来看一条月结账单的费项明细：</p>
+<p><img src="2022-11-03-11-29-13-image.png" srcset="/my-blog/img/loading.gif" lazyload alt="月结账单"></p>
+<h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>以上就是设计WMS结算模块的全部思路，当然本文章也不能将全部的细节都呈现出来，主要是记录本人在设计这一块功能时的整个历程以及是如何分析这一部分的内容，如何将业务场景进行一步步抽象成系统可识别语言。</p>
+<p>文章的顺序虽然是先分析了合同，后抽象三个系统名词：费项、因子、条件，但是自己大脑还是要有一个整体的思路和布局，不然后面的数据中心的设计，也衔接不上前面定义的功能。</p>
+<p>图片中的系统样子也不可能一步就实现的，也是通过后续上线后一步步完善的，用户提需求再进行开发，比如计费因子刚上线的时候也就10个左右，现在可以看到系统里面已经有几十个了，但是整体的架构和流程并未改动任何地方，现在的使用情况无非就是哪个客户的计费比较特殊，我们需要再重新定义一个新得计费因子来进行满足。</p>
+<p>具体的使用情况，我这里就不做描述了，肯定不会差的，相信后面只会越来越好。</p>
+<p>放眼整个WMS功能，本人自己觉得结费这一块做的应该是最好的，可圈可点，当然任何一个产品功能不可能满足所有的业务场景，是吗？？</p>
 
                 
               </div>
